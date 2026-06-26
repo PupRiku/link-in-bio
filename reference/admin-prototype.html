@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>RIKU admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --base:#0A0A0B; --panel:#0E0C12; --surface:#141019; --surface-2:#1A1622; --raise:#211C2B;
+    --line:#272430; --line-2:#332E3D;
+    --oxblood:#6E0B14; --oxblood-live:#A11020; --oxblood-soft:#E2B6BC;
+    --steel:#C2C7CD; --mute:#7A7782; --dim:#56535E; --bone:#EDE9E3;
+    --orange:#FF7A1A; --purple:#A855F7; --teal:#2DD4BF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:#050506;color:var(--bone);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  .app{display:grid;grid-template-columns:236px 1fr;min-height:100vh;max-width:1240px;margin:0 auto;background:var(--base);}
+
+  /* ---------- SIDEBAR ---------- */
+  .side{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:22px 16px;position:relative;}
+  .side::after{content:"";position:absolute;top:0;right:-1px;width:1px;height:120px;
+     background:linear-gradient(180deg,var(--teal),transparent);opacity:.5;}
+  .brand{display:flex;align-items:baseline;gap:8px;padding:4px 10px 22px;}
+  .brand b{font-family:'Anton';font-size:26px;letter-spacing:.01em;color:var(--bone);}
+  .brand span{font-family:'Oswald';font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--teal);}
+  .nav{display:flex;flex-direction:column;gap:3px;}
+  .nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:var(--mute);
+     font-family:'Oswald';font-weight:500;font-size:13px;letter-spacing:.06em;text-transform:uppercase;position:relative;
+     transition:background .16s ease,color .16s ease;}
+  .nav a svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.6;}
+  .nav a:hover{background:var(--surface);color:var(--steel);}
+  .nav a.on{background:var(--surface-2);color:var(--bone);}
+  .nav a.on::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:2px;
+     background:var(--teal);box-shadow:0 0 10px var(--teal);}
+  .side__foot{margin-top:auto;padding-top:18px;border-top:1px solid var(--line);}
+  .who{display:flex;align-items:center;gap:10px;padding:8px 6px;}
+  .who .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--oxblood-live),#3a0810);
+     display:flex;align-items:center;justify-content:center;font-family:'Anton';font-size:14px;color:var(--bone);}
+  .who .id b{font-size:13px;font-weight:500;display:block;line-height:1.1;}
+  .who .id span{font-size:11px;color:var(--dim);}
+  .signout{margin-top:8px;width:100%;text-align:left;background:transparent;border:1px solid var(--line-2);color:var(--mute);
+     border-radius:9px;padding:8px 12px;font-family:'Oswald';font-size:12px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;
+     transition:border-color .16s,color .16s;}
+  .signout:hover{border-color:var(--oxblood);color:var(--oxblood-soft);}
+
+  /* ---------- MAIN ---------- */
+  .main{padding:26px 32px 48px;min-width:0;}
+  .top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px;}
+  .top h1{font-family:'Anton';font-weight:400;font-size:34px;letter-spacing:-.01em;line-height:1;}
+  .top .sub{font-size:13px;color:var(--mute);margin-top:7px;}
+  .viewsite{font-family:'Oswald';font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);
+     border:1px solid var(--line-2);border-radius:9px;padding:9px 14px;display:inline-flex;align-items:center;gap:7px;
+     transition:border-color .16s,background .16s;}
+  .viewsite:hover{border-color:var(--teal);background:rgba(45,212,191,.06);}
+
+  /* ---------- STAT CARDS ---------- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden;}
+  .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent,var(--steel));opacity:.85;}
+  .stat .k{font-family:'Oswald';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);}
+  .stat .v{font-size:30px;font-weight:600;margin-top:8px;letter-spacing:-.01em;}
+  .stat .d{font-size:11.5px;color:var(--dim);margin-top:4px;}
+  .stat .d .up{color:var(--teal);}
+
+  /* ---------- GRID ---------- */
+  .grid{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;margin-bottom:22px;}
+  .grid--even{grid-template-columns:1fr 1fr;}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;min-width:0;}
+  .card h2{font-family:'Oswald';font-weight:600;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--steel);margin-bottom:14px;
+     display:flex;align-items:center;justify-content:space-between;}
+  .card h2 .small{font-family:'Inter';font-weight:400;font-size:11px;letter-spacing:0;text-transform:none;color:var(--dim);}
+
+  .chartwrap{position:relative;height:170px;}
+  .chartwrap svg{width:100%;height:100%;display:block;overflow:visible;}
+
+  .toplinks{display:flex;flex-direction:column;gap:13px;}
+  .bar{display:grid;grid-template-columns:84px 1fr 34px;align-items:center;gap:10px;font-size:13px;}
+  .bar .lab{color:var(--steel);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .bar .track{height:7px;border-radius:4px;background:var(--surface-2);overflow:hidden;}
+  .bar .fill{height:100%;border-radius:4px;background:var(--teal);box-shadow:0 0 10px -2px var(--teal);}
+  .bar .num{text-align:right;color:var(--mute);font-variant-numeric:tabular-nums;}
+
+  .feed{display:flex;flex-direction:column;}
+  .feed .row{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line);}
+  .feed .row:last-child{border-bottom:none;}
+  .feed .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
+  .feed .lab{flex:1;font-size:13px;color:var(--bone);}
+  .feed .lab small{display:block;color:var(--dim);font-size:11px;margin-top:1px;}
+  .feed .t{font-size:11px;color:var(--mute);font-variant-numeric:tabular-nums;}
+
+  /* ---------- BADGES ---------- */
+  .badge{font-family:'Oswald';font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid;}
+  .badge.pub{color:var(--teal);border-color:rgba(45,212,191,.4);background:rgba(45,212,191,.08);}
+  .badge.dark{color:var(--oxblood-soft);border-color:rgba(161,16,32,.5);background:rgba(161,16,32,.12);}
+
+  /* ---------- LINKS TABLE ---------- */
+  .panelhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .panelhead h2{font-family:'Oswald';font-weight:600;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--steel);}
+  .btn{font-family:'Oswald';font-size:12px;letter-spacing:.08em;text-transform:uppercase;border-radius:9px;padding:9px 14px;cursor:pointer;
+     border:1px solid var(--teal);color:var(--teal);background:transparent;transition:background .16s,color .16s;display:inline-flex;align-items:center;gap:7px;}
+  .btn:hover{background:var(--teal);color:#06210f;}
+  .table{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .tr{display:grid;grid-template-columns:42px 1.4fr 1fr 96px 70px 96px;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line);}
+  .tr.head{background:var(--panel);color:var(--mute);font-family:'Oswald';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;}
+  .tr:last-child{border-bottom:none;}
+  .tr:not(.head):hover{background:var(--surface-2);}
+  .chip{width:34px;height:34px;border-radius:9px;background:var(--surface-2);border:1px solid var(--line-2);
+     display:flex;align-items:center;justify-content:center;font-family:'Oswald';font-weight:600;font-size:12px;color:var(--steel);}
+  .tr .lab b{font-size:14px;font-weight:500;}
+  .tr .lab span{display:block;font-size:11.5px;color:var(--dim);margin-top:1px;}
+  .tr .url{font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;}
+  .toggle{width:38px;height:21px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line-2);position:relative;cursor:pointer;}
+  .toggle::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:var(--dim);transition:.18s;}
+  .toggle.on{background:rgba(45,212,191,.2);border-color:var(--teal);}
+  .toggle.on::after{left:19px;background:var(--teal);box-shadow:0 0 8px var(--teal);}
+  .acts{display:flex;gap:7px;justify-content:flex-end;}
+  .iconbtn{width:30px;height:30px;border-radius:8px;border:1px solid var(--line-2);background:transparent;color:var(--mute);cursor:pointer;
+     display:flex;align-items:center;justify-content:center;transition:border-color .16s,color .16s;}
+  .iconbtn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.6;}
+  .iconbtn:hover{border-color:var(--steel);color:var(--bone);}
+  .iconbtn.del:hover{border-color:var(--oxblood);color:var(--oxblood-soft);}
+
+  /* ---------- FORM SAMPLE ---------- */
+  .formcard{margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;}
+  .formcard h2{grid-column:1/-1;font-family:'Oswald';font-weight:600;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--steel);}
+  .field label{display:block;font-family:'Oswald';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:7px;}
+  .field input,.field select{width:100%;background:var(--panel);border:1px solid var(--line-2);border-radius:9px;padding:10px 12px;
+     color:var(--bone);font-family:'Inter';font-size:14px;transition:border-color .16s,box-shadow .16s;}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(45,212,191,.14);}
+  .field input::placeholder{color:var(--dim);}
+  .formcard .actions{grid-column:1/-1;display:flex;gap:10px;justify-content:flex-end;margin-top:4px;}
+  .btn.ghost{border-color:var(--line-2);color:var(--mute);}
+  .btn.ghost:hover{background:var(--surface-2);color:var(--bone);}
+  .btn.solid{background:var(--teal);color:#06210f;border-color:var(--teal);}
+
+  /* mobile bar + drawer */
+  .mbar{display:none;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;
+     background:var(--base);border-bottom:1px solid var(--line);padding:12px 16px;margin:-18px -16px 16px;}
+  .mbar .brand{padding:0;}
+  .burger{width:40px;height:40px;border-radius:10px;border:1px solid var(--line-2);background:transparent;color:var(--steel);
+     cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .burger svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;opacity:0;pointer-events:none;transition:opacity .22s ease;}
+
+  @media (max-width:860px){
+    .app{display:block;}
+    .main{padding:18px 16px 44px;}
+    .mbar{display:flex;}
+    .side{position:fixed;top:0;left:0;bottom:0;width:266px;z-index:50;transform:translateX(-100%);
+       transition:transform .26s ease;padding:20px 14px;}
+    .app[data-drawer="open"] .side{transform:translateX(0);}
+    .app[data-drawer="open"] .scrim{opacity:1;pointer-events:auto;}
+    .top{flex-wrap:wrap;}
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .grid,.grid--even{grid-template-columns:1fr;}
+    .formcard{grid-template-columns:1fr;}
+    .tr{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:14px 16px;}
+    .tr.head{display:none;}
+    .tr .lab{flex:1 1 auto;}
+    .tr .url{flex:1 1 100%;}
+    .tr .acts{margin-left:auto;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <div class="brand"><b>RIKU</b><span>admin</span></div>
+    <nav class="nav">
+      <a class="on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+      <a><svg viewBox="0 0 24 24"><path d="M9 12a3 3 0 0 0 3 3h3a3 3 0 0 0 0-6h-1"/><path d="M15 12a3 3 0 0 0-3-3H9a3 3 0 0 0 0 6h1"/></svg>Links</a>
+      <a><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>Events</a>
+      <a><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 21c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>Profile</a>
+      <a><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 16v-5M12 16V8M16 16v-8"/></svg>Analytics</a>
+    </nav>
+    <div class="side__foot">
+      <div class="who">
+        <div class="av">R</div>
+        <div class="id"><b>Riku</b><span>github / PupRiku</span></div>
+      </div>
+      <button class="signout">Sign out</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="mbar">
+      <div class="brand"><b>RIKU</b><span>admin</span></div>
+      <button class="burger" id="burger" aria-label="Open menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+    <div class="top">
+      <div>
+        <h1>Dashboard</h1>
+        <div class="sub">Overview of clicks and link activity</div>
+      </div>
+      <a class="viewsite">View public site
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M9 7h8v8"/></svg>
+      </a>
+    </div>
+
+    <div class="stats">
+      <div class="stat" style="--accent:var(--teal)"><div class="k">Total clicks</div><div class="v">1,284</div><div class="d"><span class="up">+12%</span> vs last month</div></div>
+      <div class="stat" style="--accent:var(--steel)"><div class="k">Last 30 days</div><div class="v">412</div><div class="d">across all links</div></div>
+      <div class="stat" style="--accent:var(--purple)"><div class="k">Active links</div><div class="v">9</div><div class="d">3 public &middot; 6 after dark</div></div>
+      <div class="stat" style="--accent:var(--oxblood-live)"><div class="k">After-dark share</div><div class="v">41%</div><div class="d">of last-30-day taps</div></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Clicks <span class="small">last 30 days</span></h2>
+        <div class="chartwrap">
+          <svg id="trend" viewBox="0 0 600 170" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#2DD4BF" stop-opacity="0.32"/>
+                <stop offset="1" stop-color="#2DD4BF" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <g id="grid" stroke="#272430" stroke-width="1"></g>
+            <path id="area" fill="url(#fill)"/>
+            <path id="line" fill="none" stroke="#2DD4BF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Top links</h2>
+        <div class="toplinks">
+          <div class="bar"><div class="lab">Instagram</div><div class="track"><div class="fill" style="width:100%"></div></div><div class="num">318</div></div>
+          <div class="bar"><div class="lab">Scruff</div><div class="track"><div class="fill" style="width:74%;background:var(--oxblood-live);box-shadow:0 0 10px -2px var(--oxblood-live)"></div></div><div class="num">236</div></div>
+          <div class="bar"><div class="lab">Telegram</div><div class="track"><div class="fill" style="width:58%"></div></div><div class="num">184</div></div>
+          <div class="bar"><div class="lab">Recon</div><div class="track"><div class="fill" style="width:44%;background:var(--oxblood-live);box-shadow:0 0 10px -2px var(--oxblood-live)"></div></div><div class="num">141</div></div>
+          <div class="bar"><div class="lab">Snapchat</div><div class="track"><div class="fill" style="width:31%"></div></div><div class="num">98</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid--even">
+      <div class="card">
+        <h2>Recent clicks</h2>
+        <div class="feed">
+          <div class="row"><span class="dot" style="background:var(--orange)"></span><div class="lab">Instagram <small>direct &middot; US</small></div><div class="t">2m ago</div></div>
+          <div class="row"><span class="dot" style="background:var(--oxblood-live)"></span><div class="lab">Scruff <small>t.co &middot; US</small></div><div class="t">14m ago</div></div>
+          <div class="row"><span class="dot" style="background:var(--teal)"></span><div class="lab">Telegram <small>direct &middot; CA</small></div><div class="t">38m ago</div></div>
+          <div class="row"><span class="dot" style="background:var(--oxblood-live)"></span><div class="lab">JFF <small>direct &middot; US</small></div><div class="t">1h ago</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Top referrers</h2>
+        <div class="feed">
+          <div class="row"><div class="lab">Direct / QR</div><div class="t">612</div></div>
+          <div class="row"><div class="lab">t.co (X)</div><div class="t">284</div></div>
+          <div class="row"><div class="lab">instagram.com</div><div class="t">201</div></div>
+          <div class="row"><div class="lab">bsky.app</div><div class="t">96</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LINKS TABLE -->
+    <div class="panelhead">
+      <h2>Links</h2>
+      <button class="btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add link</button>
+    </div>
+    <div class="table">
+      <div class="tr head"><div></div><div>Link</div><div>Destination</div><div>Tier</div><div>Active</div><div></div></div>
+      <div class="tr">
+        <div class="chip">IG</div>
+        <div class="lab"><b>Instagram</b><span>/go/instagram</span></div>
+        <div class="url">instagram.com/riku</div>
+        <div><span class="badge pub">Public</span></div>
+        <div><div class="toggle on"></div></div>
+        <div class="acts">
+          <button class="iconbtn"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+          <button class="iconbtn del"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+        </div>
+      </div>
+      <div class="tr">
+        <div class="chip">SF</div>
+        <div class="lab"><b>Scruff</b><span>/go/scruff</span></div>
+        <div class="url">scruff.com/u/riku</div>
+        <div><span class="badge dark">After dark</span></div>
+        <div><div class="toggle on"></div></div>
+        <div class="acts">
+          <button class="iconbtn"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+          <button class="iconbtn del"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+        </div>
+      </div>
+      <div class="tr">
+        <div class="chip">TG</div>
+        <div class="lab"><b>Telegram</b><span>/go/telegram</span></div>
+        <div class="url">t.me/riku</div>
+        <div><span class="badge pub">Public</span></div>
+        <div><div class="toggle"></div></div>
+        <div class="acts">
+          <button class="iconbtn"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+          <button class="iconbtn del"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM SAMPLE -->
+    <div class="formcard">
+      <h2>Edit link</h2>
+      <div class="field"><label>Label</label><input value="Instagram"></div>
+      <div class="field"><label>Slug</label><input value="instagram"></div>
+      <div class="field" style="grid-column:1/-1"><label>Destination URL</label><input placeholder="https://instagram.com/yourhandle" value="https://instagram.com/riku"></div>
+      <div class="field"><label>Tier</label><select><option>Public</option><option>After dark</option></select></div>
+      <div class="field"><label>Accent</label><select><option>Orange</option><option>Purple</option><option>Teal</option><option>Oxblood</option></select></div>
+      <div class="actions">
+        <button class="btn ghost">Cancel</button>
+        <button class="btn solid">Save changes</button>
+      </div>
+    </div>
+  </main>
+  <div class="scrim" id="scrim"></div>
+</div>
+
+<script>
+  // mock 30-day trend
+  const W=600,H=170,pad=8;
+  const pts=[];let v=9;
+  for(let i=0;i<30;i++){v=Math.max(2,v+(Math.random()*8-3.5));pts.push(v);}
+  const max=Math.max(...pts)*1.15;
+  const x=i=>pad+i*(W-2*pad)/(pts.length-1);
+  const y=val=>H-pad-(val/max)*(H-2*pad);
+  let line=`M ${x(0)} ${y(pts[0])}`;
+  for(let i=1;i<pts.length;i++) line+=` L ${x(i)} ${y(pts[i])}`;
+  document.getElementById('line').setAttribute('d',line);
+  document.getElementById('area').setAttribute('d',`${line} L ${x(pts.length-1)} ${H-pad} L ${x(0)} ${H-pad} Z`);
+  let g='';for(let r=1;r<4;r++){const gy=pad+r*(H-2*pad)/4;g+=`<line x1="0" y1="${gy}" x2="${W}" y2="${gy}"/>`;}
+  document.getElementById('grid').innerHTML=g;
+
+  const app=document.querySelector('.app');
+  const burger=document.getElementById('burger');
+  const scrim=document.getElementById('scrim');
+  const setDrawer=o=>app.setAttribute('data-drawer',o?'open':'closed');
+  burger.addEventListener('click',()=>setDrawer(app.getAttribute('data-drawer')!=='open'));
+  scrim.addEventListener('click',()=>setDrawer(false));
+  document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>setDrawer(false)));
+</script>
+</body>
+</html>

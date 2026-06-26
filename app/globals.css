@@ -1,5 +1,41 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Admin design tokens (from reference/admin-prototype.html), registered as
+   Tailwind v4 theme colors so they're usable as utilities (bg-surface,
+   border-line, text-teal, …). These are additive — the public page's own
+   class-based styles below are untouched.
+--------------------------------------------------------------------------- */
+@theme {
+  --color-base: #0a0a0b;
+  --color-panel: #0e0c12;
+  --color-surface: #141019;
+  --color-surface-2: #1a1622;
+  --color-raise: #211c2b;
+  --color-line: #272430;
+  --color-line-2: #332e3d;
+  --color-oxblood: #6e0b14;
+  --color-oxblood-live: #a11020;
+  --color-oxblood-soft: #e2b6bc;
+  --color-steel: #c2c7cd;
+  --color-mute: #7a7782;
+  --color-dim: #56535e;
+  --color-bone: #ede9e3;
+  --color-orange: #ff7a1a;
+  --color-purple: #a855f7;
+  --color-teal: #2dd4bf;
+}
+
+/* Font helpers for the admin area — reuse the self-hosted next/font families
+   loaded in the root layout. (Body text inherits Inter from the public body
+   rule below.) */
+.font-anton {
+  font-family: var(--font-anton), "Anton", system-ui, sans-serif;
+}
+.font-oswald {
+  font-family: var(--font-oswald), "Oswald", system-ui, sans-serif;
+}
+
 :root {
   --base: #0a0a0b;
   --charc: #16131a;
@@ -16,10 +52,12 @@
   --teal: #2dd4bf;
   --pad: 24px;
 }
+/* NOTE: intentionally no unlayered margin/padding reset here. Tailwind v4's
+   preflight (in @layer base) already zeroes margin and padding on every
+   element. An unlayered reset would outrank Tailwind's utility layer and
+   silently strip spacing utilities (padding, margin) from the admin area. */
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 html,
 body {

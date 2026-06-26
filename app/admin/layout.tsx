@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 
 import { requireAdmin } from "@/lib/auth";
-import { signOut } from "@/lib/auth-actions";
-import AdminNav from "./AdminNav";
+import AdminShell from "./_components/AdminShell";
 
 export const metadata: Metadata = {
   title: "RIKU admin",
@@ -18,39 +17,25 @@ export default async function AdminLayout({
 }) {
   const user = await requireAdmin();
 
-  return (
-    <div className="min-h-screen w-full bg-zinc-950 text-zinc-100">
-      <header className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-4 px-6 py-3">
-          <span className="text-sm font-semibold tracking-tight">
-            RIKU admin
-          </span>
-          <AdminNav />
-          <div className="ml-auto flex items-center gap-3">
-            <a
-              href="/"
-              target="_blank"
-              rel="noreferrer"
-              className="text-xs text-zinc-500 hover:text-zinc-300"
-            >
-              View site ↗
-            </a>
-            <span className="hidden text-xs text-zinc-500 sm:inline">
-              {user.email ?? user.id.slice(0, 8)}
-            </span>
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:border-zinc-500 hover:text-zinc-100"
-              >
-                Sign out
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  const githubLogin =
+    typeof meta.user_name === "string"
+      ? meta.user_name
+      : typeof meta.preferred_username === "string"
+        ? meta.preferred_username
+        : null;
+  const userName =
+    (typeof meta.name === "string" && meta.name) ||
+    githubLogin ||
+    user.email?.split("@")[0] ||
+    "Admin";
+  const userHandle = githubLogin
+    ? `github / ${githubLogin}`
+    : (user.email ?? user.id.slice(0, 8));
 
-      <main className="mx-auto max-w-5xl px-6 py-8">{children}</main>
-    </div>
+  return (
+    <AdminShell userName={userName} userHandle={userHandle}>
+      {children}
+    </AdminShell>
   );
 }
