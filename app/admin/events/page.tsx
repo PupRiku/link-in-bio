@@ -1,16 +1,22 @@
-import Link from "next/link";
-
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { EventRow } from "@/lib/supabase/types";
+import { Card, IconButton, PageHeader } from "../_components/ui";
+import { EditIcon, TrashIcon } from "../_components/icons";
 import { createEvent, deleteEvent } from "./actions";
 import EventForm from "./EventForm";
 
 export const dynamic = "force-dynamic";
 
-function fmt(date: string): string {
-  const [y, m, d] = date.split("-");
-  return `${y}-${m}-${d}`;
+const MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+function fmtDate(date: string): { d: string; m: string } {
+  const [, month, day] = date.split("-");
+  const idx = Math.max(0, Math.min(11, Number(month) - 1));
+  return { d: (day ?? "").padStart(2, "0"), m: MONTHS[idx] };
 }
 
 export default async function EventsPage() {
@@ -25,74 +31,73 @@ export default async function EventsPage() {
   const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-xl font-semibold">Events</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Upcoming travel shown on the public page (public events with a future
-          start date).
-        </p>
-      </div>
+    <>
+      <PageHeader
+        title="Events"
+        subtitle="Upcoming travel shown on the public page (public events with a future start date)."
+      />
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/30">
+      <div className="overflow-hidden rounded-[14px] border border-line bg-surface">
         {events.length === 0 ? (
-          <div className="px-4 py-6 text-sm text-zinc-500">No events yet.</div>
+          <div className="px-[18px] py-6 text-sm text-dim">No events yet.</div>
         ) : (
           events.map((ev) => {
+            const { d, m } = fmtDate(ev.starts_at);
             const past = ev.starts_at < today;
             return (
               <div
                 key={ev.id}
-                className="flex flex-wrap items-center gap-3 border-b border-zinc-800 px-4 py-3 last:border-b-0"
+                className="flex flex-wrap items-center gap-x-3.5 gap-y-2 border-b border-line px-[18px] py-3.5 last:border-b-0 hover:bg-surface-2"
               >
-                <span className="w-24 font-mono text-xs text-zinc-400">
-                  {fmt(ev.starts_at)}
-                </span>
+                <div className="flex w-[52px] flex-none flex-col items-center text-center font-oswald leading-[1.05]">
+                  <span className="text-[20px] font-semibold text-teal">{d}</span>
+                  <span className="text-[11px] uppercase tracking-[0.12em] text-mute">
+                    {m}
+                  </span>
+                </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{ev.title}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <b className="text-[14.5px] font-medium">{ev.title}</b>
                     {!ev.is_public ? (
-                      <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] uppercase text-zinc-400">
+                      <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-mute">
                         private
                       </span>
                     ) : null}
                     {past ? (
-                      <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] uppercase text-zinc-500">
+                      <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-dim">
                         past
                       </span>
                     ) : null}
                   </div>
-                  <div className="truncate text-xs text-zinc-500">
+                  <span className="block text-[12.5px] text-mute">
                     {[ev.venue, ev.city].filter(Boolean).join(" · ") || "—"}
-                  </div>
+                  </span>
                 </div>
-                <Link
-                  href={`/admin/events/${ev.id}`}
-                  className="rounded-md border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:border-zinc-500"
-                >
-                  Edit
-                </Link>
-                <form action={deleteEvent}>
-                  <input type="hidden" name="id" value={ev.id} />
-                  <button
-                    type="submit"
-                    className="rounded-md border border-red-900/60 px-2 py-1 text-xs text-red-300 hover:border-red-700"
-                  >
-                    Delete
-                  </button>
-                </form>
+                <div className="ml-auto flex items-center gap-1.5">
+                  <IconButton href={`/admin/events/${ev.id}`} aria-label="Edit event">
+                    <EditIcon />
+                  </IconButton>
+                  <form action={deleteEvent}>
+                    <input type="hidden" name="id" value={ev.id} />
+                    <IconButton variant="del" type="submit" aria-label="Delete event">
+                      <TrashIcon />
+                    </IconButton>
+                  </form>
+                </div>
               </div>
             );
           })
         )}
       </div>
 
-      <div>
-        <h2 className="mb-3 text-sm font-semibold">Add an event</h2>
-        <div className="max-w-2xl rounded-xl border border-zinc-800 bg-zinc-900/30 p-5">
+      <div className="mt-8">
+        <h2 className="mb-3 font-oswald text-[12px] font-semibold uppercase tracking-[0.16em] text-steel">
+          Add an event
+        </h2>
+        <Card className="max-w-2xl">
           <EventForm action={createEvent} submitLabel="Create event" />
-        </div>
+        </Card>
       </div>
-    </div>
+    </>
   );
 }

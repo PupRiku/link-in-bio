@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { EventRow } from "@/lib/supabase/types";
+import { Card, PageHeader } from "../../_components/ui";
 import EventForm from "../EventForm";
 import { updateEvent } from "../actions";
 
@@ -27,24 +28,19 @@ export default async function EditEventPage({
   const event = data as EventRow;
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <div>
-        <Link
-          href="/admin/events"
-          className="text-sm text-zinc-500 hover:text-zinc-300"
-        >
-          ← Events
-        </Link>
-        <h1 className="mt-2 text-xl font-semibold">Edit “{event.title}”</h1>
+    <div className="max-w-2xl">
+      <Link
+        href="/admin/events"
+        className="font-oswald text-[12px] uppercase tracking-[0.1em] text-mute hover:text-steel"
+      >
+        ← Events
+      </Link>
+      <div className="mt-3">
+        <PageHeader title="Edit event" subtitle={event.title} />
       </div>
-
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-5">
-        <EventForm
-          action={updateEvent}
-          defaultValues={event}
-          submitLabel="Save changes"
-        />
-      </div>
+      <Card>
+        <EventForm action={updateEvent} defaultValues={event} submitLabel="Save changes" />
+      </Card>
     </div>
   );
 }

@@ -3,13 +3,15 @@
 import { useActionState } from "react";
 
 import type { EventRow } from "@/lib/supabase/types";
+import {
+  Button,
+  CheckboxField,
+  Field,
+  FormBanner,
+} from "../_components/ui";
 import type { ActionState } from "./actions";
 
 type Action = (prev: ActionState, formData: FormData) => Promise<ActionState>;
-
-const field =
-  "w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-400";
-const labelCls = "block text-xs font-medium uppercase tracking-wide text-zinc-400";
 
 export default function EventForm({
   action,
@@ -23,128 +25,81 @@ export default function EventForm({
   const [state, formAction] = useActionState<ActionState, FormData>(action, {});
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
       {defaultValues?.id ? (
         <input type="hidden" name="id" value={defaultValues.id} />
       ) : null}
 
       {state?.error ? (
-        <div className="rounded-md border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-200">
-          {state.error}
+        <div className="sm:col-span-2">
+          <FormBanner error={state.error} />
         </div>
       ) : null}
 
-      <div className="space-y-1">
-        <label className={labelCls} htmlFor="title">
-          Title
-        </label>
-        <input
-          id="title"
-          name="title"
-          className={field}
-          defaultValue={defaultValues?.title ?? ""}
-          placeholder="Chicago weekend"
-          required
-        />
-      </div>
+      <Field
+        label="Title"
+        name="title"
+        defaultValue={defaultValues?.title ?? ""}
+        placeholder="Chicago weekend"
+        required
+        className="sm:col-span-2"
+      />
+      <Field
+        label="Venue"
+        name="venue"
+        defaultValue={defaultValues?.venue ?? ""}
+        placeholder="The Eagle"
+      />
+      <Field
+        label="City"
+        name="city"
+        defaultValue={defaultValues?.city ?? ""}
+        placeholder="Chicago"
+      />
+      <Field
+        label="Starts"
+        name="starts_at"
+        type="date"
+        defaultValue={defaultValues?.starts_at ?? ""}
+        required
+      />
+      <Field
+        label="Ends (optional)"
+        name="ends_at"
+        type="date"
+        defaultValue={defaultValues?.ends_at ?? ""}
+      />
+      <Field
+        label="URL (optional)"
+        name="url"
+        defaultValue={defaultValues?.url ?? ""}
+        placeholder="https://…"
+        className="sm:col-span-2"
+      />
+      <Field
+        label="Blurb (optional)"
+        name="blurb"
+        defaultValue={defaultValues?.blurb ?? ""}
+        placeholder="glamping · placeholder"
+        className="sm:col-span-2"
+      />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1">
-          <label className={labelCls} htmlFor="venue">
-            Venue
-          </label>
-          <input
-            id="venue"
-            name="venue"
-            className={field}
-            defaultValue={defaultValues?.venue ?? ""}
-            placeholder="The Eagle"
-          />
-        </div>
-        <div className="space-y-1">
-          <label className={labelCls} htmlFor="city">
-            City
-          </label>
-          <input
-            id="city"
-            name="city"
-            className={field}
-            defaultValue={defaultValues?.city ?? ""}
-            placeholder="Chicago"
-          />
-        </div>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1">
-          <label className={labelCls} htmlFor="starts_at">
-            Starts
-          </label>
-          <input
-            id="starts_at"
-            name="starts_at"
-            type="date"
-            className={field}
-            defaultValue={defaultValues?.starts_at ?? ""}
-            required
-          />
-        </div>
-        <div className="space-y-1">
-          <label className={labelCls} htmlFor="ends_at">
-            Ends (optional)
-          </label>
-          <input
-            id="ends_at"
-            name="ends_at"
-            type="date"
-            className={field}
-            defaultValue={defaultValues?.ends_at ?? ""}
-          />
-        </div>
-      </div>
-
-      <div className="space-y-1">
-        <label className={labelCls} htmlFor="url">
-          URL (optional)
-        </label>
-        <input
-          id="url"
-          name="url"
-          className={field}
-          defaultValue={defaultValues?.url ?? ""}
-          placeholder="https://…"
-        />
-      </div>
-
-      <div className="space-y-1">
-        <label className={labelCls} htmlFor="blurb">
-          Blurb (optional)
-        </label>
-        <input
-          id="blurb"
-          name="blurb"
-          className={field}
-          defaultValue={defaultValues?.blurb ?? ""}
-          placeholder="glamping · placeholder"
-        />
-      </div>
-
-      <label className="flex items-center gap-2 text-sm text-zinc-300">
-        <input
-          type="checkbox"
+      <div className="sm:col-span-2">
+        <CheckboxField
+          label="Public (visible on the travel panel)"
           name="is_public"
           defaultChecked={defaultValues?.is_public ?? true}
-          className="h-4 w-4 rounded border-zinc-600 bg-zinc-900"
         />
-        Public (visible on the travel panel)
-      </label>
+      </div>
 
-      <button
-        type="submit"
-        className="rounded-md bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-white"
-      >
-        {submitLabel}
-      </button>
+      <div className="flex justify-end gap-2.5 sm:col-span-2">
+        <Button variant="ghost" href="/admin/events">
+          Cancel
+        </Button>
+        <Button variant="solid" type="submit">
+          {submitLabel}
+        </Button>
+      </div>
     </form>
   );
 }
