@@ -89,6 +89,7 @@ export default function RikuPage({
 
   const travelBtnRef = useRef<HTMLButtonElement>(null);
   const travelCloseRef = useRef<HTMLButtonElement>(null);
+  const travelPanelRef = useRef<HTMLElement>(null);
   const travelTouched = useRef(false);
   const playerRef = useRef<SpotifyPlayerHandle>(null);
 
@@ -133,8 +134,18 @@ export default function RikuPage({
       travelTouched.current = true;
       return;
     }
-    if (travelOpen) travelCloseRef.current?.focus();
-    else travelBtnRef.current?.focus();
+    if (travelOpen) {
+      travelCloseRef.current?.focus();
+      // Reset to the top so the panel reads as a fresh page: both the window
+      // and the panel's own scroll container. Honor reduced-motion (instant).
+      const reduced = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+      window.scrollTo({ top: 0, left: 0, behavior: reduced ? "auto" : "smooth" });
+      if (travelPanelRef.current) travelPanelRef.current.scrollTop = 0;
+    } else {
+      travelBtnRef.current?.focus();
+    }
   }, [travelOpen]);
 
   const heroSrc = profile.hero_image_url || "/riku-hero.jpg";
@@ -310,6 +321,7 @@ export default function RikuPage({
       <section
         className="travel-panel"
         id="travelPanel"
+        ref={travelPanelRef}
         aria-hidden={!travelOpen}
         aria-label="Upcoming travel"
       >
