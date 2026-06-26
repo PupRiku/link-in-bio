@@ -23,6 +23,7 @@ const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
 export function Button({
   variant = "primary",
   href,
+  download,
   type = "button",
   className = "",
   children,
@@ -30,12 +31,21 @@ export function Button({
 }: {
   variant?: ButtonVariant;
   href?: string;
+  download?: string;
   type?: "button" | "submit";
   className?: string;
   children: ReactNode;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const cls = `${BUTTON_BASE} ${BUTTON_VARIANTS[variant]} ${className}`;
   if (href) {
+    // Downloads (and data:/blob: URLs) need a plain anchor, not next/link.
+    if (download) {
+      return (
+        <a href={href} download={download} className={cls}>
+          {children}
+        </a>
+      );
+    }
     return (
       <Link href={href} className={cls}>
         {children}

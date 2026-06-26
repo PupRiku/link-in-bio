@@ -13,6 +13,7 @@ import {
   EventsIcon,
   LinksIcon,
   ProfileIcon,
+  QrIcon,
 } from "./icons";
 
 type NavItem = {
@@ -27,6 +28,7 @@ const NAV: NavItem[] = [
   { href: "/admin/events", label: "Events", Icon: EventsIcon },
   { href: "/admin/profile", label: "Profile", Icon: ProfileIcon },
   { href: "/admin/analytics", label: "Analytics", Icon: AnalyticsIcon },
+  { href: "/admin/share", label: "Share", Icon: QrIcon },
 ];
 
 export default function AdminShell({

@@ -60,3 +60,26 @@ export async function getUpcomingEvents(): Promise<EventRow[]> {
   }
   return data ?? [];
 }
+
+/**
+ * Resolve a Spotify playlist's display name via Spotify's public oEmbed
+ * endpoint (server-side, so no CORS). Cached for a day so it's not hit per
+ * view, but refreshes within 24h if the playlist URL changes. Returns null
+ * on empty input or any failure so the caller can fall back.
+ */
+export async function getSpotifyTitle(
+  playlistUrl: string | null | undefined
+): Promise<string | null> {
+  if (!playlistUrl) return null;
+  try {
+    const res = await fetch(
+      `https://open.spotify.com/oembed?url=${encodeURIComponent(playlistUrl)}`,
+      { next: { revalidate: 86400 } }
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as { title?: string };
+    return data.title?.trim() || null;
+  } catch {
+    return null;
+  }
+}

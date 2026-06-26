@@ -3,6 +3,7 @@ import {
   getAfterDarkLinks,
   getProfile,
   getPublicLinks,
+  getSpotifyTitle,
   getUpcomingEvents,
 } from "@/lib/data";
 import type { Profile } from "@/lib/supabase/types";
@@ -30,12 +31,18 @@ export default async function Page() {
     getUpcomingEvents(),
   ]);
 
+  const resolvedProfile = profile ?? FALLBACK_PROFILE;
+  const spotifyTitle = await getSpotifyTitle(
+    resolvedProfile.spotify_playlist_url
+  );
+
   return (
     <RikuPage
-      profile={profile ?? FALLBACK_PROFILE}
+      profile={resolvedProfile}
       publicLinks={publicLinks}
       afterDarkLinks={afterDarkLinks}
       events={events}
+      spotifyTitle={spotifyTitle}
     />
   );
 }

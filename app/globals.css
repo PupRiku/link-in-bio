@@ -342,6 +342,18 @@ body {
   color: #1ed760;
   opacity: 0.75;
 }
+/* Inline Spotify embed panel (revealed on tap; iframe is lazy-mounted). */
+.np-embed {
+  margin: -6px 0 15px;
+  border: 1px solid #1d2230;
+  border-radius: 13px;
+  overflow: hidden;
+  background: #0b0a10;
+}
+.np-embed iframe {
+  display: block;
+  width: 100%;
+}
 
 /* ---------- HERO WAVEFORM ---------- */
 .wave {

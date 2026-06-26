@@ -7,6 +7,7 @@ import {
   IconButton,
   PageHeader,
 } from "../_components/ui";
+import { ChipContent } from "../../_components/platform-icons";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -60,7 +61,7 @@ function LinkRowItem({ link }: { link: LinkRow }) {
     >
       {/* chip */}
       <span className="flex h-[34px] w-[34px] flex-none items-center justify-center rounded-[9px] border border-line-2 bg-surface-2 font-oswald text-[12px] font-semibold text-steel">
-        {link.icon ?? link.label.slice(0, 2)}
+        <ChipContent icon={link.icon} label={link.label} size={16} />
       </span>
 
       {/* label + slug */}

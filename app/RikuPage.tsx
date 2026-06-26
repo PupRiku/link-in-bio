@@ -4,6 +4,18 @@ import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import type { EventRow, Link, Profile } from "@/lib/supabase/types";
+import { ChipContent } from "./_components/platform-icons";
+import SpotifyPlayer, {
+  type SpotifyPlayerHandle,
+} from "./_components/SpotifyPlayer";
+
+// Pull the playlist id from a saved Spotify URL/URI. Returns null if absent
+// (the ambient bar is hidden in that case).
+function spotifyPlaylistId(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const m = url.match(/playlist[/:]([a-zA-Z0-9]+)/);
+  return m ? m[1] : null;
+}
 
 type Bar = {
   color: string;
@@ -58,13 +70,19 @@ export default function RikuPage({
   publicLinks,
   afterDarkLinks,
   events,
+  spotifyTitle,
 }: {
   profile: Profile;
   publicLinks: Link[];
   afterDarkLinks: Link[];
   events: EventRow[];
+  spotifyTitle?: string | null;
 }) {
+  // `playing` reflects REAL playback state reported by the Spotify controller
+  // (it also drives the simulated hero waveform via data-playing). `spotifyOn`
+  // tracks whether the player has been mounted (first tap onward).
   const [playing, setPlaying] = useState(false);
+  const [spotifyOn, setSpotifyOn] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
   const [travelOpen, setTravelOpen] = useState(false);
   const [bars, setBars] = useState<Bar[]>([]);
@@ -72,6 +90,7 @@ export default function RikuPage({
   const travelBtnRef = useRef<HTMLButtonElement>(null);
   const travelCloseRef = useRef<HTMLButtonElement>(null);
   const travelTouched = useRef(false);
+  const playerRef = useRef<SpotifyPlayerHandle>(null);
 
   // Build the simulated 64-bar waveform on the client (uses Math.random,
   // so it must run post-mount to avoid a hydration mismatch).
@@ -119,6 +138,18 @@ export default function RikuPage({
   }, [travelOpen]);
 
   const heroSrc = profile.hero_image_url || "/riku-hero.jpg";
+  const playlistId = spotifyPlaylistId(profile.spotify_playlist_url);
+  const spotifyUri = playlistId ? `spotify:playlist:${playlistId}` : null;
+
+  // First tap mounts the player (which auto-plays); later taps toggle the
+  // existing controller. State flows back from the controller's events.
+  function handleSpotifyToggle() {
+    if (!spotifyOn) {
+      setSpotifyOn(true);
+      return;
+    }
+    playerRef.current?.toggle();
+  }
 
   return (
     <main
@@ -164,21 +195,38 @@ export default function RikuPage({
       </header>
 
       <section className="body">
-        <div className="np rise" style={{ animationDelay: ".28s" }}>
-          <button
-            className="np__toggle"
-            aria-pressed={playing}
-            aria-label="Play Spotify playlist"
-            onClick={() => setPlaying((p) => !p)}
-          >
-            <span className="np__icon">{playing ? "❚❚" : "▶"}</span>
-          </button>
-          <div className="np__meta">
-            <b>Summer set</b>
-            <span>ambient mix · tap to play</span>
-          </div>
-          <span className="np__tag">Spotify</span>
-        </div>
+        {spotifyUri ? (
+          <>
+            <div className="np rise" style={{ animationDelay: ".28s" }}>
+              <button
+                className="np__toggle"
+                aria-pressed={playing}
+                aria-label={
+                  playing ? "Pause playlist" : "Play Spotify playlist"
+                }
+                onClick={handleSpotifyToggle}
+              >
+                <span className="np__icon">{playing ? "❚❚" : "▶"}</span>
+              </button>
+              <div className="np__meta">
+                <b>{spotifyTitle || "Ambient set"}</b>
+                <span>{playing ? "now playing · Spotify" : "tap to play"}</span>
+              </div>
+              <span className="np__tag">Spotify</span>
+            </div>
+            {/* The player (script + controller + iframe) mounts only after the
+                first tap — nothing loads or plays before then. The hero
+                waveform stays simulated (the embed exposes no audio data) and
+                is switched on/off by the controller's real playback events. */}
+            {spotifyOn ? (
+              <SpotifyPlayer
+                ref={playerRef}
+                uri={spotifyUri}
+                onPlayingChange={setPlaying}
+              />
+            ) : null}
+          </>
+        ) : null}
 
         {publicLinks.map((link, i) => (
           <a
@@ -193,7 +241,9 @@ export default function RikuPage({
             href={`/go/${link.slug}`}
             aria-label={link.label}
           >
-            <span className="chip">{link.icon ?? link.label.slice(0, 2)}</span>
+            <span className="chip">
+              <ChipContent icon={link.icon} label={link.label} />
+            </span>
             <span className="tile__label">{link.label}</span>
             <span className="tile__arrow">&rsaquo;</span>
           </a>
@@ -223,7 +273,7 @@ export default function RikuPage({
                     aria-label={link.label}
                   >
                     <span className="chip">
-                      {link.icon ?? link.label.slice(0, 2)}
+                      <ChipContent icon={link.icon} label={link.label} />
                     </span>
                     <span className="tile__label">{link.label}</span>
                     <span className="tile__arrow">&rsaquo;</span>

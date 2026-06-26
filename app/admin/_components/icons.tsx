@@ -127,3 +127,31 @@ export function ChevronDownIcon(props: SVGProps<SVGSVGElement>) {
     </Base>
   );
 }
+
+export function QrIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <path d="M14 14h3M21 14v3M14 18v3M18 21h3M21 18v.01M18 18v.01" />
+    </Base>
+  );
+}
+
+export function CopyIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M5 15V5a2 2 0 0 1 2-2h8" />
+    </Base>
+  );
+}
+
+export function DownloadIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <path d="M12 3v12M7 11l5 5 5-5M5 21h14" />
+    </Base>
+  );
+}
