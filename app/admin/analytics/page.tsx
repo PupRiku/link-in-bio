@@ -1,6 +1,8 @@
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Link as LinkRow, LinkTier } from "@/lib/supabase/types";
+import { Bar, Card, PageHeader, StatCard } from "../_components/ui";
+import TrendChart from "../_components/TrendChart";
 
 export const dynamic = "force-dynamic";
 
@@ -10,52 +12,6 @@ type ClickRow = {
   referrer: string | null;
   created_at: string;
 };
-
-function Card({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-5">
-      <h2 className="mb-4 text-sm font-semibold">{title}</h2>
-      {children}
-    </div>
-  );
-}
-
-function Bar({
-  label,
-  value,
-  max,
-  sub,
-}: {
-  label: string;
-  value: number;
-  max: number;
-  sub?: string;
-}) {
-  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
-  return (
-    <div className="mb-2 last:mb-0">
-      <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
-        <span className="truncate text-zinc-300">
-          {label}
-          {sub ? <span className="ml-2 text-xs text-zinc-600">{sub}</span> : null}
-        </span>
-        <span className="tabular-nums text-zinc-400">{value}</span>
-      </div>
-      <div className="h-2 w-full rounded bg-zinc-800">
-        <div
-          className="h-2 rounded bg-zinc-400"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
-  );
-}
 
 export default async function AnalyticsPage() {
   await requireAdmin();
@@ -79,30 +35,38 @@ export default async function AnalyticsPage() {
 
   const linkById = new Map(links.map((l) => [l.id, l]));
   const linkBySlug = new Map(links.map((l) => [l.slug, l]));
+  const resolve = (c: ClickRow) =>
+    (c.link_id && linkById.get(c.link_id)) ||
+    (c.slug && linkBySlug.get(c.slug)) ||
+    null;
 
-  // Clicks per link (joined to label + tier).
   const perLink = new Map<
     string,
     { label: string; tier: LinkTier | "unknown"; count: number }
   >();
-  // Public vs after-dark split.
   const tierSplit: Record<"public" | "after_dark" | "unknown", number> = {
     public: 0,
     after_dark: 0,
     unknown: 0,
   };
-  // Referrers.
   const referrers = new Map<string, number>();
 
+  // 30-day buckets (UTC).
+  const days: { date: string; count: number }[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - i);
+    days.push({ date: d.toISOString().slice(0, 10), count: 0 });
+  }
+  const dayIndex = new Map(days.map((d, i) => [d.date, i]));
+  let last30 = 0;
+
   for (const c of clicks) {
-    const link =
-      (c.link_id && linkById.get(c.link_id)) ||
-      (c.slug && linkBySlug.get(c.slug)) ||
-      null;
-    const key = link?.id ?? c.slug ?? "unknown";
-    const label = link ? link.label : `${c.slug ?? "unknown"} (deleted)`;
+    const link = resolve(c);
     const tier: LinkTier | "unknown" = link ? link.tier : "unknown";
 
+    const key = link?.id ?? c.slug ?? "unknown";
+    const label = link ? link.label : `${c.slug ?? "unknown"} (deleted)`;
     const entry = perLink.get(key) ?? { label, tier, count: 0 };
     entry.count += 1;
     perLink.set(key, entry);
@@ -118,6 +82,12 @@ export default async function AnalyticsPage() {
       }
     }
     referrers.set(ref, (referrers.get(ref) ?? 0) + 1);
+
+    const idx = dayIndex.get(c.created_at.slice(0, 10));
+    if (idx != null) {
+      days[idx].count += 1;
+      last30 += 1;
+    }
   }
 
   const perLinkSorted = [...perLink.values()].sort((a, b) => b.count - a.count);
@@ -129,153 +99,95 @@ export default async function AnalyticsPage() {
     .slice(0, 8);
   const maxReferrer = topReferrers[0]?.count ?? 0;
 
-  // Last 30 days trend (UTC day buckets).
-  const days: { date: string; label: string; count: number }[] = [];
-  const todayUTC = new Date();
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(todayUTC);
-    d.setUTCDate(d.getUTCDate() - i);
-    const iso = d.toISOString().slice(0, 10);
-    days.push({ date: iso, label: iso.slice(5), count: 0 });
-  }
-  const dayIndex = new Map(days.map((d, i) => [d.date, i]));
-  for (const c of clicks) {
-    const iso = c.created_at.slice(0, 10);
-    const idx = dayIndex.get(iso);
-    if (idx != null) days[idx].count += 1;
-  }
-  const maxDay = Math.max(1, ...days.map((d) => d.count));
-  const last30Total = days.reduce((s, d) => s + d.count, 0);
-
   const publicTotal = tierSplit.public;
   const afterDarkTotal = tierSplit.after_dark;
   const splitDenom = publicTotal + afterDarkTotal + tierSplit.unknown || 1;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Analytics</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Click attribution from the /go redirect. After-dark figures are
-          admin-only and never shown publicly.
-        </p>
+    <>
+      <PageHeader
+        title="Analytics"
+        subtitle="Click attribution from the /go redirect. After-dark figures are admin-only."
+      />
+
+      <div className="mb-[22px] grid grid-cols-2 gap-[14px] min-[861px]:grid-cols-4">
+        <StatCard label="Total clicks" value={total} accent="teal" />
+        <StatCard label="Last 30 days" value={last30} accent="steel" />
+        <StatCard label="Public clicks" value={publicTotal} accent="teal" />
+        <StatCard
+          label="After-dark clicks"
+          value={afterDarkTotal}
+          accent="oxblood"
+        />
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
-          <div className="text-2xl font-semibold tabular-nums">{total}</div>
-          <div className="mt-1 text-xs uppercase tracking-wide text-zinc-500">
-            Total clicks
-          </div>
-        </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
-          <div className="text-2xl font-semibold tabular-nums">
-            {last30Total}
-          </div>
-          <div className="mt-1 text-xs uppercase tracking-wide text-zinc-500">
-            Clicks · 30d
-          </div>
-        </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
-          <div className="text-2xl font-semibold tabular-nums">
-            {publicTotal}
-          </div>
-          <div className="mt-1 text-xs uppercase tracking-wide text-zinc-500">
-            Public clicks
-          </div>
-        </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
-          <div className="text-2xl font-semibold tabular-nums">
-            {afterDarkTotal}
-          </div>
-          <div className="mt-1 text-xs uppercase tracking-wide text-zinc-500">
-            After-dark clicks
-          </div>
-        </div>
+      <div className="mb-[22px]">
+        <Card title="Clicks" aside="last 30 days">
+          {last30 === 0 ? (
+            <p className="text-sm text-dim">No clicks in the last 30 days.</p>
+          ) : (
+            <TrendChart data={days.map((d) => d.count)} />
+          )}
+        </Card>
       </div>
 
-      <Card title="Last 30 days">
-        {last30Total === 0 ? (
-          <p className="text-sm text-zinc-500">No clicks in the last 30 days.</p>
-        ) : (
-          <div className="flex h-32 items-end gap-1">
-            {days.map((d) => (
-              <div
-                key={d.date}
-                className="flex flex-1 flex-col items-center justify-end"
-                title={`${d.date}: ${d.count}`}
-              >
-                <div
-                  className="w-full rounded-t bg-zinc-500"
-                  style={{
-                    height: `${Math.round((d.count / maxDay) * 100)}%`,
-                    minHeight: d.count > 0 ? "3px" : "0",
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="mb-[22px] grid grid-cols-1 gap-[14px] min-[861px]:grid-cols-2">
         <Card title="Clicks per link">
           {perLinkSorted.length === 0 ? (
-            <p className="text-sm text-zinc-500">No clicks yet.</p>
+            <p className="text-sm text-dim">No clicks yet.</p>
           ) : (
-            perLinkSorted.map((l) => (
-              <Bar
-                key={l.label}
-                label={l.label}
-                sub={l.tier}
-                value={l.count}
-                max={maxPerLink}
-              />
-            ))
+            <div className="flex flex-col gap-[13px]">
+              {perLinkSorted.map((l) => (
+                <Bar
+                  key={l.label}
+                  label={l.label}
+                  value={l.count}
+                  max={maxPerLink}
+                  zone={l.tier === "after_dark" ? "after_dark" : "public"}
+                />
+              ))}
+            </div>
           )}
         </Card>
 
         <Card title="Top referrers">
           {topReferrers.length === 0 ? (
-            <p className="text-sm text-zinc-500">No clicks yet.</p>
+            <p className="text-sm text-dim">No clicks yet.</p>
           ) : (
-            topReferrers.map((r) => (
-              <Bar
-                key={r.name}
-                label={r.name}
-                value={r.count}
-                max={maxReferrer}
-              />
-            ))
+            <div className="flex flex-col gap-[13px]">
+              {topReferrers.map((r) => (
+                <Bar key={r.name} label={r.name} value={r.count} max={maxReferrer} />
+              ))}
+            </div>
           )}
         </Card>
       </div>
 
       <Card title="Public vs after-dark">
-        <div className="mb-3 flex h-3 w-full overflow-hidden rounded bg-zinc-800">
+        <div className="mb-3 flex h-3 w-full overflow-hidden rounded bg-surface-2">
           <div
-            className="h-3 bg-teal-400"
+            className="h-3 bg-teal"
             style={{ width: `${(publicTotal / splitDenom) * 100}%` }}
           />
           <div
-            className="h-3 bg-red-500"
+            className="h-3 bg-oxblood-live"
             style={{ width: `${(afterDarkTotal / splitDenom) * 100}%` }}
           />
         </div>
-        <div className="flex gap-6 text-sm">
-          <span className="text-zinc-300">
-            <span className="mr-1 inline-block h-2 w-2 rounded-full bg-teal-400" />
+        <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-steel">
+          <span className="flex items-center gap-2">
+            <span className="inline-block h-2 w-2 rounded-full bg-teal" />
             Public · {publicTotal}
           </span>
-          <span className="text-zinc-300">
-            <span className="mr-1 inline-block h-2 w-2 rounded-full bg-red-500" />
+          <span className="flex items-center gap-2">
+            <span className="inline-block h-2 w-2 rounded-full bg-oxblood-live" />
             After-dark · {afterDarkTotal}
           </span>
           {tierSplit.unknown > 0 ? (
-            <span className="text-zinc-500">Unknown · {tierSplit.unknown}</span>
+            <span className="text-dim">Unknown · {tierSplit.unknown}</span>
           ) : null}
         </div>
       </Card>
-    </div>
+    </>
   );
 }
