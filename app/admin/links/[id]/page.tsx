@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Link as LinkRow } from "@/lib/supabase/types";
+import { Card, PageHeader } from "../../_components/ui";
 import LinkForm from "../LinkForm";
 import { updateLink } from "../actions";
 
@@ -27,24 +28,19 @@ export default async function EditLinkPage({
   const link = data as LinkRow;
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <div>
-        <Link
-          href="/admin/links"
-          className="text-sm text-zinc-500 hover:text-zinc-300"
-        >
-          ← Links
-        </Link>
-        <h1 className="mt-2 text-xl font-semibold">Edit “{link.label}”</h1>
+    <div className="max-w-3xl">
+      <Link
+        href="/admin/links"
+        className="font-oswald text-[12px] uppercase tracking-[0.1em] text-mute hover:text-steel"
+      >
+        ← Links
+      </Link>
+      <div className="mt-3">
+        <PageHeader title="Edit link" subtitle={`${link.label} · /go/${link.slug}`} />
       </div>
-
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-5">
-        <LinkForm
-          action={updateLink}
-          defaultValues={link}
-          submitLabel="Save changes"
-        />
-      </div>
+      <Card>
+        <LinkForm action={updateLink} defaultValues={link} submitLabel="Save changes" />
+      </Card>
     </div>
   );
 }
