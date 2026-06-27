@@ -340,8 +340,8 @@ export default function RikuPage({
         <div className="tp__body">
           {events.map((ev) => {
             const { d, m } = formatEventDate(ev.starts_at);
-            return (
-              <div className="event" key={ev.id}>
+            const inner = (
+              <>
                 <div className="event__date">
                   <div className="d">{d}</div>
                   <div className="m">{m}</div>
@@ -350,6 +350,37 @@ export default function RikuPage({
                   <b>{ev.title}</b>
                   <span>{eventSubtitle(ev)}</span>
                 </div>
+                {ev.url ? (
+                  <span className="event__go" aria-hidden="true">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M7 17 17 7M9 7h8v8" />
+                    </svg>
+                  </span>
+                ) : null}
+              </>
+            );
+            // Linked when the event has a url; otherwise plain, non-clickable
+            // text exactly as before (no dead links).
+            return ev.url ? (
+              <a
+                className="event event--link"
+                key={ev.id}
+                href={ev.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {inner}
+              </a>
+            ) : (
+              <div className="event" key={ev.id}>
+                {inner}
               </div>
             );
           })}
